@@ -56,8 +56,8 @@ betaReduction :: Expr -> Expr
 betaReduction expr@(App (Abs x body) argument) = substituion body (Var x) argument
 -- betaReduction expr@(App (Abs x body) argument) = trace (prettyprint x++" --> "++show argument) $ substituion body (Var x) argument
 
--- this function will not terminate when a applied to an expression that
--- has not normal form
+-- this function will not terminate when applied to an expression that
+-- has no normal form
 reduceToNormalForm expr
     | alphaEquivalence expr result = result
     -- | otherwise                    = trace (show expr++"\n") $ reduceToNormalForm result
