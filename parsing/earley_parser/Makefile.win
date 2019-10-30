@@ -1,0 +1,154 @@
+# Makefile for Windows
+# Requires the bare minimum of additional software. GNU Make is required though.
+# Matthias Bisping
+
+
+########################################################################
+# variables
+########################################################################
+
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
+CMPL = cl
+OPTS1 = /EHsc /Ox
+
+GRAMMARDEMO_CPP = src/grammardemo.cpp
+GRAMMARDEMO_EXE = bin/grammardemo.exe
+PARSER_EXE = bin/parse.exe
+PARSER_SO_EXE = bin/parse_so.exe
+INDICATOR_DEMO_EXE = bin/indicator_demo.exe
+
+.DEFAULT_GOAL := default
+
+########################################################################
+# targets
+########################################################################
+
+default: $(PARSER_EXE)
+
+# show help
+help:
+	@echo Usage:${\n}
+	@echo make    ..................compiles src/parse.cpp
+	@echo make    parserdemo1.......demonstrates parser
+	@echo make    parserdemo2.......demonstrates parser
+	@echo make    indicatordemo.....demonstrates indicator classes
+	@echo make    grammardemo EXP...demonstrates grammar by reading in 10^EXP rules
+	@echo make    docu..............generates documentation in doc
+	@echo make    help..............shows this message
+	@echo make    clean.............removes all generated files
+	@echo make    complete_demo.....runs all demos
+
+
+complete_demo: $(PARSER_EXE) $(GRAMMAR_EXE)
+
+	@echo running indicatordemo
+	@echo ---------------------
+	@$(MAKE) -s -f $(THIS_FILE) indicatordemo
+
+	@echo running grammardemo
+	@echo -------------------
+	@$(MAKE) -s -f $(THIS_FILE) grammardemo
+
+	@echo running parserdemo1 -- toy grammar
+	@echo ----------------------------------
+	@$(MAKE) -s -f $(THIS_FILE) parserdemo1
+
+	@echo running parserdemo2 -- overloaded grammar symbols
+	@echo -------------------------------------------------
+	@$(MAKE) -s -f $(THIS_FILE) parserdemo2
+
+	@echo running parserdemo3 -- left recursive rules
+	@echo -------------------------------------------
+	@$(MAKE) -s -f $(THIS_FILE) parserdemo3
+
+	@echo running parserdemo4 -- realistic grammar
+	@echo ----------------------------------------
+	@$(MAKE) -s -f $(THIS_FILE) parserdemo4
+
+	@echo cleaning up
+	@echo -----------
+	@$(MAKE) -s -f $(THIS_FILE) clean
+
+
+parserdemo1: $(PARSER_EXE) ## demo
+
+	@$(PARSER_EXE) -f data/example1.input -g data/example1.cfg -t data/example1.pos \
+        -w data/example1.words -v 3
+
+
+parserdemo2: $(PARSER_SO_EXE) ## demo
+
+	@python src/genrules.py 3 gramrules
+	@mv gramrules data/temp/
+	@$(PARSER_SO_EXE) -f data/example2.input -g data/temp/gramrules -t data/example2.pos \
+        -w data/example2.words -v 2
+
+parserdemo3: $(PARSER_EXE) ## demo
+
+	@$(PARSER_EXE) -f data/example4.input -g data/example4.cfg -t data/example4.pos \
+        -w data/example4.words -v 2
+
+parserdemo4: $(PARSER_EXE) ## demo
+
+	@$(PARSER_EXE) -f data/example1.input -g data/bitpar.cfg -t data/bitpar.pos \
+        -w data/bitpar.words -v 2
+
+indicatordemo: $(INDICATOR_DEMO_EXE) ##demonstrates busy indicators and progressbar
+
+	@bin/indicator_demo.exe
+
+$(INDICATOR_DEMO_EXE): incl/busy.hpp incl/load.hpp src/indicator_demo.cpp
+
+	@$(CMPL) $(OPTS1) src/indicator_demo.cpp
+	@cmd /c move indicator_demo.exe bin
+	@del indicator_demo.*
+
+
+$(PARSER_EXE): incl/busy.hpp incl/chart.hpp incl/color.hpp incl/declarations.hpp \
+               incl/grammar.hpp incl/helper.hpp incl/item.hpp incl/load.hpp \
+               incl/parser.hpp incl/rule.hpp src/parse.cpp
+
+	@$(CMPL) $(OPTS1) src/parse.cpp
+	@cmd /c move parse.exe bin
+	@del parse.*
+
+
+$(PARSER_SO_EXE): incl/busy.hpp incl/chart.hpp incl/color.hpp incl/declarations.hpp \
+               incl/grammar.hpp incl/helper.hpp incl/item.hpp incl/load.hpp \
+               incl/parser.hpp incl/rule.hpp src/parse.cpp
+
+	@$(CMPL) $(OPTS1) /DSOVERLOAD=1 src/parse.cpp
+	@cmd /c move parse.exe bin/parse_so.exe
+	@del parse.*
+
+
+# make documentation
+docu:
+
+	@cmd /c if exist "doc\html\" rmdir /Q /S doc\html
+	@doxygen earley_parser.doxygen
+	@cmd /c move html doc
+
+
+clean:
+
+	@del /F /Q bin\*
+	@del /F /Q data\temp\*
+	@cmd /c if exist "doc\html\" rmdir /Q /S doc\html
+
+EXP = 6
+
+# make grammardemo
+$(GRAMMARDEMO_EXE):
+
+	@$(CMPL) $(OPTS1) $(GRAMMARDEMO_CPP)
+	@cmd /c move grammardemo.exe bin
+	@del grammardemo.*
+
+grammardemo: src/genrules.py $(GRAMMARDEMO_EXE) ## generates 10^i rules and fills grammar with these
+
+	@python src/genrules.py $(EXP) gramrules
+	@cmd /c move gramrules data/temp
+	@$(GRAMMARDEMO_EXE)
+	@rm data/temp/gramrules

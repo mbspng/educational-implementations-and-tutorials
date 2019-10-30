@@ -1,0 +1,72 @@
+An Implementation of the Earley Parser                            Matthias Bisping   2015
+--------------------------------------                            ----------------   ----
+
+This is an implementation of the Earley Parser. The Earley Parser is a chart
+parser for context free grammars. This implementation comes with a generic
+grammar class, the parser itself still only handles CFGs.
+
+
+Compilation:
+------------
+
+To compile the program, you can use GNU make. A Makefile for Linux, Windows and
+the GNUWin32 environment is provided. On Linux you can execute make directly with
+“make <rule>". For Windows type “make -f Makefile.(win | gnuwin ) <rule>”. The
+default target compiles an executable file "parser.out" in "bin".
+For more options call “make help”. To manually compile the program, compile
+"src/parse.cpp".
+The compilation can be modified by the flag SOVERLOAD = 1. This flag should
+be used when grammars that contain overloaded symbols are used. For example a
+grammar that has both rules “A --> B” and “A --> a”, “A” and "B" being non-terminal
+symbols, “a” being a terminal. NOTE: The program has shown to to perform best
+when compiled with a native Linux Compiler, such as GCC or clang. The performance
+when compiled with the Microsoft C/C++ compiler is atleast 1 order of magnitude
+worse; while a given derivation takes around 5 seconds when compiled with GCC,
+it takes more than 5 minutes when compiled with Microsoft C/C++.
+
+The following compilers have been tested:
+
+- clang-700.0.72
+- clang 3.5.2 / 3.5.0
+- GCC 5.2.0 / 4.8.3
+- Microsoft C/C++ 19.00.23026 for x86
+
+
+Usage:
+------
+
+The program requires 3 files at least: a grammar, a file with POS-tags and a
+lexicon with a mapping from words to tags. Input can be sent via a pipe, or by a
+fourth file.
+Run the executable with -h for more information. The program can be run with
+medium or high verbosity levels for the output. Level 0 will only print 0 or 1
+for the derivation having failed or having been successful. 1 will send 3 lines
+per parse to stdout, level 2 will send the entire parse chart.
+
+The program comes with test data, you can run all tests with "make complete_demo"
+
+
+Details:
+--------
+
+The program first parses the grammar file into a grammar representation. The user
+can specify a custom rule format, for which he then needs to provide a rule parser
+functor to  pass to the grammar as a template parameter. Once the grammar has been
+loaded the actual parsing process takes place. The parser runs on a one
+dimensional chart. By default the parser returns only a bool after parsing an
+input. But a copy of the parse chart can be extracted via get_chart(). This needs
+to happen before the next input sequence is passed in, as the chart will be reset.
+
+
+REQUIREMENTS
+------------
+
+To use all options provided, the following software is required:
+
+- GNU make
+- gcc-c++ compiler
+- Doxygen
+
+None of the above is mandatory, if you are content compiling and executing
+everything manually. In that case use any of the tested compilers.
+
