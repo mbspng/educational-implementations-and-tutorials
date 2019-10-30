@@ -70,3 +70,9 @@ To use all options provided, the following software is required:
 None of the above is mandatory, if you are content compiling and executing
 everything manually. In that case use any of the tested compilers.
 
+
+Data
+----
+
+The CFG can be found at https://www.cis.uni-muenchen.de/~schmid/tools/BitPar/
+
